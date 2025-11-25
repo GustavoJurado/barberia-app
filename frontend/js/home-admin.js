@@ -1,5 +1,5 @@
 // ------------------------------------------------------
-// home-admin.js — Dashboard para ADMIN (VERSIÓN FINAL CORREGIDA)
+// home-admin.js — Dashboard para ADMIN (VERSIÓN FINAL)
 // ------------------------------------------------------
 
 import { apiGet, apiPost, apiPut, apiDelete } from "./api.js";
@@ -88,11 +88,12 @@ async function cargarResumen() {
         const hoy = hoyISO();
         const citasHoy = await apiGet(`/citas?fecha=${hoy}`, true);
         const clientes = await apiGet("/clientes", true);
-        const barberos = await apiGet("/barberos");
+        const barberos = await apiGet("/barberos", true);
 
         document.getElementById("cardCitasHoy").textContent = citasHoy.length;
         document.getElementById("cardClientes").textContent = clientes.length;
         document.getElementById("cardBarberos").textContent = barberos.length;
+
     } catch (err) {
         console.error("Error resumen:", err);
     }
@@ -103,8 +104,9 @@ async function cargarResumen() {
 // ======================================================
 async function cargarBarberosFiltro() {
     try {
-        const lista = await apiGet("/barberos");
+        const lista = await apiGet("/barberos", true);
         const sel = document.getElementById("barberoFiltroAdmin");
+
         sel.innerHTML = `<option value="">Todos</option>`;
 
         lista.forEach(b => {
@@ -208,7 +210,7 @@ async function cargarClientes() {
 // BARBEROS
 // ======================================================
 async function cargarBarberos() {
-    const lista = await apiGet("/barberos");
+    const lista = await apiGet("/barberos", true);
     const tbody = document.getElementById("tbodyBarberos");
     tbody.innerHTML = "";
 
@@ -219,7 +221,7 @@ async function cargarBarberos() {
             <td>${b.nombre}</td>
             <td style="text-align:center;">
                 <button class="btn-primary"
-                    onclick="abrirModalBarberoEditar(${b.id}, '${escapeHTML(b.nombre)}', '${b.email}', '${b.foto}', '${b.cliente_id}')">
+                    onclick="abrirModalBarberoEditar(${b.id}, '${escapeHTML(b.nombre)}')">
                     ✏️
                 </button>
                 <button class="btn-eliminar"
@@ -252,16 +254,13 @@ function abrirModalBarbero(modo) {
     document.getElementById("modalBarberoOverlay").style.display = "flex";
 }
 
-window.abrirModalBarberoEditar = function(id, nombre, email, foto, cliente_id) {
+window.abrirModalBarberoEditar = function(id, nombre) {
     modoBarbero = "editar";
     barberoEditandoId = id;
 
-    clienteIdEditando =
-        !cliente_id || cliente_id === "null" ? null : Number(cliente_id);
-
     document.getElementById("campoNombreBarbero").value = nombre;
-    document.getElementById("campoEmailBarbero").value = email || "";
-    document.getElementById("campoFotoBarbero").value = foto || "";
+    document.getElementById("campoEmailBarbero").value = "";
+    document.getElementById("campoFotoBarbero").value = "";
     document.getElementById("campoPasswordBarbero").value = "";
 
     document.getElementById("tituloModalBarbero").textContent = "Editar Barbero";
@@ -287,56 +286,28 @@ async function guardarBarbero() {
     if (modoBarbero === "crear") {
         if (!email || !pass) return alert("Correo y contraseña obligatorios");
 
+        // 1) Crear usuario tipo barbero
         const nuevo = await apiPost("/auth/register", {
-            nombre, email, password: pass, rol:"barbero"
+            nombre,
+            email,
+            password: pass,
+            rol: "barbero"
         });
 
+        // 2) Crear registro barbero
         await apiPost("/barberos", {
             nombre,
             foto: foto || null,
             cliente_id: nuevo.id
         }, true);
-
     }
     // -------- EDITAR --------
     else {
 
-        // 1) Actualizar tabla barberos
         await apiPut(`/barberos/${barberoEditandoId}`, {
             nombre,
             foto: foto || null
         }, true);
-
-        // Si no tiene cliente_id → termina
-        if (!clienteIdEditando) {
-            cerrarModalBarbero();
-            cargarBarberos();
-            cargarResumen();
-            cargarBarberosFiltro();
-            return;
-        }
-
-        // 2) Obtener cliente asociado
-        const clientes = await apiGet("/clientes", true);
-        const cliente = clientes.find(c => c.id == clienteIdEditando);
-
-        if (!cliente) {
-            alert("Error: no se encontró el cliente asociado.");
-            return;
-        }
-
-        // 3) Construir datos seguros
-        const datosActualizados = {
-            nombre: nombre || cliente.nombre,
-            email : email  || cliente.email,
-            puntos: cliente.puntos,
-            rol   : cliente.rol
-        };
-
-        if (pass) datosActualizados.password = pass;
-
-        // 4) Actualizar clientes
-        await apiPut(`/clientes/${clienteIdEditando}`, datosActualizados, true);
     }
 
     cerrarModalBarbero();
