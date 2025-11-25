@@ -1,8 +1,9 @@
 // ------------------------------------------------------
-// api.js — funciones para consumir el backend
+// api.js — funciones para consumir el backend en producción
 // ------------------------------------------------------
 
-const API_URL = "http://localhost:3000";  // 🔥 IMPORTANTE
+// 🔥 URL del backend en Render
+const API_URL = "https://barberia-app-hx7w.onrender.com";
 
 // GET
 export async function apiGet(url, auth = false) {
