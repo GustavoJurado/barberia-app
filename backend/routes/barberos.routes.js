@@ -1,6 +1,5 @@
 // ------------------------------------------------------
-// RUTAS DE BARBEROS
-// Tabla barberos: id, nombre, foto, cliente_id (FK clientes.id)
+// RUTAS DE BARBEROS (VERSIÓN FULL CORREGIDA)
 // ------------------------------------------------------
 
 import express from "express";
@@ -10,33 +9,30 @@ import bcrypt from "bcryptjs";
 
 const router = express.Router();
 
-/*
-========================================================
- GET → Listar barberos
- Ahora protegido con token y solo devuelve:
-    id, nombre
-Esto evita errores en frontend
-========================================================
-*/
+// ------------------------------------------------------
+// GET -> Listar barberos (PROTEGIDO)
+// Solo devuelve: id, nombre
+// ------------------------------------------------------
 router.get("/", verificarToken, async (req, res) => {
     try {
-        const [rows] = await db.query(
-            `SELECT id, nombre FROM barberos ORDER BY id ASC`
-        );
+        const [rows] = await db.query(`
+            SELECT id, nombre
+            FROM barberos
+            ORDER BY id ASC
+        `);
 
         res.json(rows);
+
     } catch (error) {
         console.error("❌ Error al obtener barberos:", error);
         res.status(500).json({ error: "Error al obtener barberos" });
     }
 });
 
-
-/*
-========================================================
- POST → Crear barbero (solo admin)
-========================================================
-*/
+// ------------------------------------------------------
+// POST -> Crear barbero (solo admin)
+// Requiere: nombre, foto (opcional), cliente_id
+// ------------------------------------------------------
 router.post("/", verificarToken, verificarRol("admin"), async (req, res) => {
     try {
         const { nombre, foto, cliente_id } = req.body;
@@ -52,65 +48,32 @@ router.post("/", verificarToken, verificarRol("admin"), async (req, res) => {
         );
 
         res.json({ message: "Barbero creado correctamente" });
+
     } catch (error) {
         console.error("❌ Error al crear barbero:", error);
         res.status(500).json({ error: "Error al crear barbero" });
     }
 });
 
-
-/*
-========================================================
- PUT → Editar barbero (admin)
-========================================================
-*/
+// ------------------------------------------------------
+// PUT -> Editar barbero
+// Actualiza: nombre, foto
+// ------------------------------------------------------
 router.put("/:id", verificarToken, verificarRol("admin"), async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, foto, email, password } = req.body;
+        const { nombre, foto } = req.body;
 
         if (!nombre) {
             return res.status(400).json({ error: "El nombre es obligatorio" });
         }
 
-        // Obtener cliente_id del barbero
-        const [barberoRows] = await db.query(
-            "SELECT cliente_id FROM barberos WHERE id = ?",
-            [id]
-        );
-
-        if (barberoRows.length === 0) {
-            return res.status(404).json({ error: "Barbero no encontrado" });
-        }
-
-        const clienteId = barberoRows[0].cliente_id;
-
-        // Actualizar tabla barberos
         await db.query(
             `UPDATE barberos 
              SET nombre = ?, foto = ?
              WHERE id = ?`,
             [nombre, foto || null, id]
         );
-
-        // Actualizar cliente (si existe)
-        if (clienteId) {
-
-            if (email) {
-                await db.query(
-                    `UPDATE clientes SET email = ? WHERE id = ?`,
-                    [email, clienteId]
-                );
-            }
-
-            if (password && password.trim() !== "") {
-                const hashed = await bcrypt.hash(password, 10);
-                await db.query(
-                    `UPDATE clientes SET password = ? WHERE id = ?`,
-                    [hashed, clienteId]
-                );
-            }
-        }
 
         res.json({ message: "Barbero actualizado correctamente" });
 
@@ -120,12 +83,10 @@ router.put("/:id", verificarToken, verificarRol("admin"), async (req, res) => {
     }
 });
 
-
-/*
-========================================================
- DELETE → Eliminar barbero (admin)
-========================================================
-*/
+// ------------------------------------------------------
+// DELETE -> Eliminar barbero
+// NO elimina el cliente asociado
+// ------------------------------------------------------
 router.delete("/:id", verificarToken, verificarRol("admin"), async (req, res) => {
     try {
         const { id } = req.params;
@@ -133,6 +94,7 @@ router.delete("/:id", verificarToken, verificarRol("admin"), async (req, res) =>
         await db.query("DELETE FROM barberos WHERE id = ?", [id]);
 
         res.json({ message: "Barbero eliminado correctamente" });
+
     } catch (error) {
         console.error("❌ Error al eliminar barbero:", error);
         res.status(500).json({ error: "Error al eliminar barbero" });
