@@ -1,55 +1,38 @@
-// ------------------------------------------------------
-// MIDDLEWARES DE AUTENTICACIÓN Y AUTORIZACIÓN
-// ------------------------------------------------------
-
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+dotenv.config();
 
-const SECRET = "super_secreto_barberia"; // → llévalo a .env después
-
-// ------------------------------------------------------
-// MIDDLEWARE -> Verificar Token (rutas protegidas)
-// ------------------------------------------------------
-export const verificarToken = (req, res, next) => {
-
-    const tokenHeader = req.headers["authorization"];
-
-    if (!tokenHeader) {
+// --------------------------------------------
+// Verificar Token
+// --------------------------------------------
+export function verificarToken(req, res, next) {
+    const header = req.headers["authorization"];
+    if (!header) {
         return res.status(401).json({ error: "Token no enviado" });
     }
 
-    // "Bearer TOKEN_AQUI"
-    const tokenParts = tokenHeader.split(" ");
-
-    if (tokenParts.length !== 2 || tokenParts[0] !== "Bearer") {
-        return res.status(401).json({ error: "Formato de token inválido" });
+    const token = header.split(" ")[1];
+    if (!token) {
+        return res.status(401).json({ error: "Token inválido" });
     }
-
-    const token = tokenParts[1]; // 🔥 SOLO EL TOKEN
 
     try {
-        const decoded = jwt.verify(token, SECRET);
-        req.usuario = decoded; // Guarda { id, email, rol }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.usuario = decoded;
         next();
-    } catch (error) {
+    } catch (err) {
         return res.status(401).json({ error: "Token inválido o expirado" });
     }
-};
+}
 
-
-// ------------------------------------------------------
-// MIDDLEWARE -> Verificar Rol (admin, barbero, cliente)
-// ------------------------------------------------------
-export const verificarRol = (...rolesPermitidos) => {
+// --------------------------------------------
+// Verificar ROL (acepta múltiples roles)
+// --------------------------------------------
+export function verificarRol(...roles) {
     return (req, res, next) => {
-
-        if (!req.usuario || !req.usuario.rol) {
-            return res.status(401).json({ error: "No autorizado" });
+        if (!req.usuario || !roles.includes(req.usuario.rol)) {
+            return res.status(403).json({ error: "Acceso denegado" });
         }
-
-        if (!rolesPermitidos.includes(req.usuario.rol)) {
-            return res.status(403).json({ error: "No tienes permisos para esta acción" });
-        }
-
         next();
     };
-};
+}

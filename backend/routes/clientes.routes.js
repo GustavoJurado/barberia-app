@@ -1,7 +1,3 @@
-// ------------------------------------------------------
-// RUTAS: URLs que el frontend o Postman pueden llamar
-// ------------------------------------------------------
-
 import express from "express";
 import { 
     getClientes, 
@@ -18,45 +14,28 @@ import { verificarToken, verificarRol } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-// ------------------------------------------------------
-// GET -> Obtener todos los clientes (ADMIN)
-// ------------------------------------------------------
+// Clientes (admin)
 router.get("/", verificarToken, verificarRol("admin"), getClientes);
 
-// ------------------------------------------------------
-// GET -> Obtener mis citas (cliente logueado)
-// ------------------------------------------------------
-router.get("/mis-citas", verificarToken, getMisCitas);
-
-// ------------------------------------------------------
-// GET -> Perfil del cliente logueado
-// ------------------------------------------------------
+// Perfil
 router.get("/perfil", verificarToken, getPerfil);
 
-// ------------------------------------------------------
-// GET -> Mis puntos
-// ------------------------------------------------------
+// Mis citas
+router.get("/mis-citas", verificarToken, getMisCitas);
+
+// Mis puntos
 router.get("/mis-puntos", verificarToken, getMisPuntos);
 
-// ------------------------------------------------------
-// GET -> Mi historial (cliente)
-// ------------------------------------------------------
+// Mi Historial
 router.get("/mis-historial", verificarToken, getMiHistorial);
 
-// ------------------------------------------------------
-// POST -> Crear cliente (admin)
-// ------------------------------------------------------
+// Crear cliente (admin)
 router.post("/", verificarToken, verificarRol("admin"), crearCliente);
 
-// ------------------------------------------------------
-// PUT -> Actualizar cliente (admin)
-// ------------------------------------------------------
+// Editar cliente
 router.put("/:id", verificarToken, verificarRol("admin"), actualizarCliente);
 
-// ------------------------------------------------------
-// DELETE -> Eliminar cliente (admin)
-// ------------------------------------------------------
+// Eliminar cliente
 router.delete("/:id", verificarToken, verificarRol("admin"), eliminarCliente);
 
-// ------------------------------------------------------
 export default router;
