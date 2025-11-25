@@ -20,38 +20,67 @@
         import { apiGet, apiPost } from "./js/api.js";
         import { llenarSelect } from "./js/ui.js";
 
-        protegerRuta();
+        protegerRuta(); // 🔐 Exige login
 
         document.addEventListener("DOMContentLoaded", () => {
             cargarBarberos();
             cargarServicios();
         });
 
+        // ===============================
+        // CARGAR BARBEROS
+        // ===============================
         async function cargarBarberos() {
-            const lista = await apiGet("/barberos");
-            llenarSelect("selectBarbero", lista);
+            try {
+                const lista = await apiGet("/barberos", true); // 🔥 usa token
+
+                if (!lista || lista.length === 0) {
+                    document.getElementById("selectBarbero").innerHTML =
+                        "<option>No hay barberos disponibles</option>";
+                    return;
+                }
+
+                llenarSelect("selectBarbero", lista);
+            } catch (err) {
+                console.error("Error barberos:", err);
+                alert("Error cargando barberos");
+            }
         }
 
+        // ===============================
+        // CARGAR SERVICIOS
+        // ===============================
         async function cargarServicios() {
-            const lista = await apiGet("/servicios");
-            llenarSelect("selectServicio", lista);
+            try {
+                const lista = await apiGet("/servicios", true); // 🔥 usa token
+
+                if (!lista || lista.length === 0) {
+                    document.getElementById("selectServicio").innerHTML =
+                        "<option>No hay servicios disponibles</option>";
+                    return;
+                }
+
+                llenarSelect("selectServicio", lista);
+            } catch (err) {
+                console.error("Error servicios:", err);
+                alert("Error cargando servicios");
+            }
         }
 
+        // ===============================
+        // CREAR CITA
+        // ===============================
         async function crearCita() {
             const barbero_id = Number(document.getElementById("selectBarbero").value);
             const servicio_id = Number(document.getElementById("selectServicio").value);
             const fecha = document.getElementById("fecha").value;
             const hora = document.getElementById("hora").value;
 
-            if (!hora) {
-                alert("Selecciona una hora");
-                return;
-            }
+            if (!hora) return alert("Selecciona una hora");
 
-            // Convertir "HH:MM" → "HH:MM:00"
             const hora_inicio = hora.length === 5 ? hora + ":00" : hora;
 
-            if (!barbero_id || !servicio_id || !fecha || !hora_inicio) {
+            if (!barbero_id || !servicio_id || !fecha) {
                 alert("Faltan datos");
                 return;
             }
@@ -69,8 +98,6 @@
             }
 
             alert("Cita creada correctamente ✔");
-
-            // 🔥 Redirección inmediata
             window.location.href = "mis-citas.html";
         }
 
