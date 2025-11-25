@@ -1,5 +1,5 @@
 // ------------------------------------------------------
-// RUTAS DE BARBEROS (VERSIÓN PRO FINAL)
+// RUTAS DE BARBEROS
 // ------------------------------------------------------
 
 import express from "express";
@@ -9,31 +9,35 @@ import bcrypt from "bcryptjs";
 
 const router = express.Router();
 
-/* ======================================================
-   GET /barberos
-   → PROTEGIDO con token
-   → Retorna SOLO {id, nombre}
-   → Perfecto para selects y listas
-=========================================================*/
-router.get("/", verificarToken, async (req, res) => {
-    try {
-        const [rows] = await db.query(`
-            SELECT id, nombre
-            FROM barberos
-            ORDER BY id ASC
-        `);
 
-        return res.json(rows);
+// ------------------------------------------------------
+// GET -> Listar barberos (NO requiere token)
+// ------------------------------------------------------
+router.get("/", async (req, res) => {
+    try {
+        const [rows] = await db.query(
+            `SELECT 
+                b.id,
+                b.nombre,
+                b.foto,
+                b.cliente_id,
+                c.email
+             FROM barberos b
+             LEFT JOIN clientes c ON c.id = b.cliente_id
+             ORDER BY b.id ASC`
+        );
+
+        res.json(rows);
     } catch (error) {
-        console.error("❌ Error GET /barberos:", error);
-        return res.status(500).json({ error: "Error al obtener barberos" });
+        console.error("❌ Error al obtener barberos:", error);
+        res.status(500).json({ error: "Error al obtener barberos" });
     }
 });
 
-/* ======================================================
-   POST /barberos (solo admin)
-   → El admin crea un barbero (que ya viene con cliente_id)
-=========================================================*/
+
+// ------------------------------------------------------
+// POST -> Crear barbero (admin)
+// ------------------------------------------------------
 router.post("/", verificarToken, verificarRol("admin"), async (req, res) => {
     try {
         const { nombre, foto, cliente_id } = req.body;
@@ -48,24 +52,36 @@ router.post("/", verificarToken, verificarRol("admin"), async (req, res) => {
             [nombre, foto || null, cliente_id || null]
         );
 
-        return res.json({ message: "Barbero creado correctamente" });
+        res.json({ message: "Barbero creado correctamente" });
     } catch (error) {
-        console.error("❌ Error POST /barberos:", error);
-        return res.status(500).json({ error: "Error al crear barbero" });
+        console.error("❌ Error al crear barbero:", error);
+        res.status(500).json({ error: "Error al crear barbero" });
     }
 });
 
-/* ======================================================
-   PUT /barberos/:id (solo admin)
-=========================================================*/
+
+// ------------------------------------------------------
+// PUT -> Editar barbero
+// ------------------------------------------------------
 router.put("/:id", verificarToken, verificarRol("admin"), async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, foto } = req.body;
+        const { nombre, foto, email, password } = req.body;
 
         if (!nombre) {
             return res.status(400).json({ error: "El nombre es obligatorio" });
         }
+
+        const [barberoRows] = await db.query(
+            "SELECT cliente_id FROM barberos WHERE id = ?",
+            [id]
+        );
+
+        if (barberoRows.length === 0) {
+            return res.status(404).json({ error: "Barbero no encontrado" });
+        }
+
+        const clienteId = barberoRows[0].cliente_id;
 
         await db.query(
             `UPDATE barberos 
@@ -74,27 +90,46 @@ router.put("/:id", verificarToken, verificarRol("admin"), async (req, res) => {
             [nombre, foto || null, id]
         );
 
-        return res.json({ message: "Barbero actualizado correctamente" });
+        if (clienteId) {
+            if (email) {
+                await db.query(
+                    `UPDATE clientes SET email = ? WHERE id = ?`,
+                    [email, clienteId]
+                );
+            }
+
+            if (password && password.trim() !== "") {
+                const hashed = await bcrypt.hash(password, 10);
+                await db.query(
+                    `UPDATE clientes SET password = ? WHERE id = ?`,
+                    [hashed, clienteId]
+                );
+            }
+        }
+
+        res.json({ message: "Barbero actualizado correctamente" });
+
     } catch (error) {
-        console.error("❌ Error PUT /barberos:", error);
-        return res.status(500).json({ error: "Error al actualizar barbero" });
+        console.error("❌ Error al actualizar barbero:", error);
+        res.status(500).json({ error: "Error al actualizar barbero" });
     }
 });
 
-/* ======================================================
-   DELETE /barberos/:id (solo admin)
-=========================================================*/
+
+// ------------------------------------------------------
+// DELETE -> Eliminar barbero
+// ------------------------------------------------------
 router.delete("/:id", verificarToken, verificarRol("admin"), async (req, res) => {
     try {
         const { id } = req.params;
-
         await db.query("DELETE FROM barberos WHERE id = ?", [id]);
 
-        return res.json({ message: "Barbero eliminado correctamente" });
+        res.json({ message: "Barbero eliminado correctamente" });
     } catch (error) {
-        console.error("❌ Error DELETE /barberos:", error);
-        return res.status(500).json({ error: "Error al eliminar barbero" });
+        console.error("❌ Error al eliminar barbero:", error);
+        res.status(500).json({ error: "Error al eliminar barbero" });
     }
 });
+
 
 export default router;
