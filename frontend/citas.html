@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservar Cita - Imperio Barber Shop</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Favicons desde carpeta /img -->
+    <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel="manifest" href="img/site.webmanifest">
+
+    <!-- JS -->
+    <script type="module">
+        import { protegerRuta, usuarioActual } from "./js/auth.js";
+        import { apiGet, apiPost } from "./js/api.js";
+        import { llenarSelect } from "./js/ui.js";
+
+        protegerRuta();
+
+        document.addEventListener("DOMContentLoaded", () => {
+            cargarBarberos();
+            cargarServicios();
+        });
+
+        async function cargarBarberos() {
+            const lista = await apiGet("/barberos");
+            llenarSelect("selectBarbero", lista);
+        }
+
+        async function cargarServicios() {
+            const lista = await apiGet("/servicios");
+            llenarSelect("selectServicio", lista);
+        }
+
+        async function crearCita() {
+            const barbero_id = Number(document.getElementById("selectBarbero").value);
+            const servicio_id = Number(document.getElementById("selectServicio").value);
+            const fecha = document.getElementById("fecha").value;
+            const hora = document.getElementById("hora").value;
+
+            if (!hora) {
+                alert("Selecciona una hora");
+                return;
+            }
+
+            // Convertir "HH:MM" → "HH:MM:00"
+            const hora_inicio = hora.length === 5 ? hora + ":00" : hora;
+
+            if (!barbero_id || !servicio_id || !fecha || !hora_inicio) {
+                alert("Faltan datos");
+                return;
+            }
+
+            const r = await apiPost("/citas", {
+                barbero_id,
+                servicio_id,
+                fecha,
+                hora_inicio
+            }, true);
+
+            if (r.error) {
+                alert(r.error);
+                return;
+            }
+
+            alert("Cita creada correctamente ✔");
+
+            // 🔥 Redirección inmediata
+            window.location.href = "mis-citas.html";
+        }
+
+        window.crearCita = crearCita;
+    </script>
+</head>
+
+<body>
+
+<header class="navbar">
+    <div class="navbar-left">
+        <img src="img/logo-imperio.png" class="logo" alt="Imperio Barber Shop logo">
+        <div class="brand-text">
+            <span class="brand-name">Imperio Barber Shop</span>
+        </div>
+    </div>
+
+    <nav class="navbar-links">
+        <a href="home.html">Inicio</a>
+        <a href="perfil.html">Perfil</a>
+        <a href="historial.html">Historial</a>
+    </nav>
+</header>
+
+<div class="main-content">
+    <h1>Reservar Cita</h1>
+
+    <div class="container formulario">
+
+        <label>Barbero:</label>
+        <select id="selectBarbero"></select>
+
+        <label>Servicio:</label>
+        <select id="selectServicio"></select>
+
+        <label>Fecha:</label>
+        <input type="date" id="fecha">
+
+        <label>Hora:</label>
+        <input type="time" id="hora">
+
+        <button class="btn-primary" onclick="crearCita()">Reservar</button>
+    </div>
+
+    <br>
+    <a href="home.html"><button class="btn-outline">Volver</button></a>
+</div>
+
+<footer class="footer">
+    <span>Imperio Barber Shop © 2025</span>
+</footer>
+
+</body>
+</html>

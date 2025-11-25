@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Imperio Barber Shop</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Favicons desde carpeta /img -->
+    <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel="manifest" href="img/site.webmanifest">
+
+    <script type="module">
+        import { login } from "./js/auth.js";
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // --------------------------
+            // LOGIN
+            // --------------------------
+            document.getElementById("btnLogin").onclick = async () => {
+                const email = document.getElementById("email").value.trim();
+                const pass  = document.getElementById("pass").value.trim();
+
+                const ok = await login(email, pass);
+
+                if (ok) location.href = "home.html";
+                else alert("Datos incorrectos");
+            };
+
+            // --------------------------
+            // OLVIDÉ MI CONTRASEÑA
+            // --------------------------
+            document.getElementById("btnOlvide").onclick = () => {
+                window.location.href = "recuperar.html";
+            };
+        });
+    </script>
+
+</head>
+
+<body>
+    <div class="container">
+        <h1>Iniciar Sesión</h1>
+
+        <input id="email" type="email" placeholder="Correo">
+        <input id="pass"  type="password" placeholder="Contraseña">
+
+        <button id="btnLogin">Entrar</button>
+
+        <div class="link">
+            <a href="register.html">Crear cuenta</a>
+        </div>
+
+        <div class="link" style="margin-top:10px;">
+            <button id="btnOlvide" class="btn-link" style="background:none;border:none;color:#007bff;cursor:pointer;">
+                ¿Olvidaste tu contraseña?
+            </button>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Historial</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script type="module">
+        import { protegerRuta } from "./js/auth.js";
+        import { apiGet } from "./js/api.js";
+
+        protegerRuta();
+
+        async function cargarHistorial() {
+            // 🔥 Ruta correcta → /clientes/mi-historial
+            const r = await apiGet("/clientes/mi-historial", true);
+
+            const tabla = document.getElementById("tablaHistorial");
+            tabla.innerHTML = "";
+
+            r.citas.forEach(c => {
+                tabla.innerHTML += `
+                    <tr>
+                        <td>${c.fecha}</td>
+                        <td>${c.hora_inicio} - ${c.hora_fin}</td>
+                        <td>${c.estado}</td>
+                        <td>${c.barbero}</td>
+                        <td>${c.servicio}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", cargarHistorial);
+    </script>
+</head>
+<body>
+<div class="container">
+    <h1>Historial</h1>
+
+    <table border="1" width="100%">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Horario</th>
+                <th>Estado</th>
+                <th>Barbero</th>
+                <th>Servicio</th>
+            </tr>
+        </thead>
+        <tbody id="tablaHistorial"></tbody>
+    </table>
+
+    <br>
+    <a href="home.html"><button>Volver</button></a>
+</div>
+</body>
+</html>

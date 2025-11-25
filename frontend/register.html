@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro – Imperio Barber Shop</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Favicons desde carpeta /img -->
+    <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel="manifest" href="img/site.webmanifest">
+
+    <!-- JS -->
+    <script type="module">
+        import { register } from "./js/auth.js";
+
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("btnReg").onclick = async () => {
+                const nombre = document.getElementById("nombre").value.trim();
+                const email  = document.getElementById("email").value.trim();
+                const pass   = document.getElementById("pass").value.trim();
+
+                const r = await register(nombre, email, pass);
+
+                if (r.message) {
+                    alert("Registrado con éxito");
+                    location.href = "index.html";
+                } else {
+                    alert("Error registrando");
+                }
+            };
+        });
+    </script>
+
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Registro</h1>
+
+        <input id="nombre" placeholder="Nombre">
+        <input id="email" type="email" placeholder="Correo">
+        <input id="pass" type="password" placeholder="Contraseña">
+
+        <button id="btnReg">Crear cuenta</button>
+    </div>
+
+</body>
+</html>

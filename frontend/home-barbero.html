@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Barbero - Imperio Barber Shop</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Favicons desde carpeta /img -->
+    <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel="manifest" href="img/site.webmanifest">
+
+    <style>
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: calc(100vh - 60px);
+        }
+
+        .sidebar {
+            background: #1b1b1b;
+            border-right: 1px solid rgba(255,255,255,0.06);
+            padding: 1.2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .sidebar h2 {
+            font-size: 1.1rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .sidebar .user-box {
+            background: rgba(62,60,60,0.95);
+            border-radius: 12px;
+            padding: 0.8rem;
+            font-size: 0.9rem;
+        }
+
+        .sidebar .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .sidebar .menu button {
+            width: 100%;
+            text-align: left;
+        }
+
+        .dashboard-main {
+            padding: 1.5rem;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.4rem;
+        }
+
+        .card {
+            background: rgba(62,60,60,0.95);
+            border-radius: 14px;
+            padding: 1rem;
+            border: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9rem;
+        }
+
+        .card-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: var(--texto-suave);
+            margin-bottom: 0.2rem;
+        }
+
+        .card-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .filtros-barbero {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+        }
+
+        .tabla-citas th, .tabla-citas td {
+            padding: 0.4rem 0.3rem;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-layout {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .sidebar .menu {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+
+    <!-- JS -->
+    <script type="module" src="js/home-barbero.js"></script>
+</head>
+
+<body>
+
+<!-- NAVBAR GENERAL -->
+<header class="navbar">
+    <div class="navbar-left">
+        <img src="img/logo-imperio.png" class="logo" alt="Imperio Barber Shop Logo">
+        <div class="brand-text">
+            <span class="brand-name">Imperio Barber Shop</span>
+            <span class="brand-sub">Panel de Barbero</span>
+        </div>
+    </div>
+
+    <nav class="navbar-links">
+        <a href="home.html">Home público</a>
+        <a href="citas.html">Reservar</a>
+        <a href="mis-citas.html">Mis citas</a>
+        <button class="btn-outline" onclick="logout()">Salir</button>
+    </nav>
+</header>
+
+<div class="dashboard-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div>
+            <h2>Hola, <span id="nombreBarbero">Barbero</span> 💈</h2>
+            <div class="user-box">
+                <div><strong>Rol:</strong> <span id="rolUsuario">barbero</span></div>
+                <div><strong>Hoy:</strong> <span id="fechaHoyTexto"></span></div>
+            </div>
+        </div>
+
+        <div class="menu">
+            <button class="btn-primary" id="btnVerHoy">Citas de hoy</button>
+            <button class="btn-outline" id="btnVerTodas">Ver semana</button>
+        </div>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="dashboard-main">
+
+        <!-- CARDS RESUMEN -->
+        <div class="cards-grid">
+            <div class="card">
+                <div class="card-title">Citas de hoy</div>
+                <div class="card-value" id="cardTotalHoy">0</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Pendientes</div>
+                <div class="card-value" id="cardPendientes">0</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Completadas hoy</div>
+                <div class="card-value" id="cardCompletadas">0</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Canceladas hoy</div>
+                <div class="card-value" id="cardCanceladas">0</div>
+            </div>
+        </div>
+
+        <!-- FILTROS -->
+        <section class="container" style="max-width:100%;">
+            <h2 style="margin-bottom:0.7rem;">Citas</h2>
+
+            <div class="filtros-barbero">
+                <div>
+                    <label for="fechaFiltro">Fecha:</label>
+                    <input type="date" id="fechaFiltro">
+                </div>
+
+                <div>
+                    <label for="barberoFiltro">Barbero:</label>
+                    <select id="barberoFiltro">
+                        <option value="">Solo mis citas</option>
+                    </select>
+                </div>
+
+                <div style="align-self:end;">
+                    <button class="btn-primary" id="btnBuscar">Buscar</button>
+                </div>
+            </div>
+
+            <table width="100%" class="tabla-citas">
+                <thead>
+                    <tr>
+                        <th>Hora</th>
+                        <th>Cliente</th>
+                        <th>Servicio</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyCitasBarbero"></tbody>
+            </table>
+        </section>
+
+    </main>
+</div>
+
+<footer class="footer">
+    <span>Imperio Barber Shop © 2025 – Panel Barbero</span>
+</footer>
+
+</body>
+</html>

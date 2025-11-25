@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Citas – Imperio BarberShop</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Favicons desde carpeta /img -->
+    <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel="manifest" href="img/site.webmanifest">
+
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-left">
+            <img src="img/logo-imperio.png" class="logo" alt="Imperio">
+            <div class="brand-text">
+                <span class="brand-name">IMPERIO</span>
+                <span class="brand-sub">Barber Shop</span>
+            </div>
+        </div>
+
+        <div class="navbar-links">
+            <a href="home.html">Inicio</a>
+            <a href="citas.html">Reservar</a>
+            <button class="btn-outline" onclick="logout()">Salir</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+
+        <h2 style="text-align:center; margin-bottom:1rem;">Mis Citas</h2>
+
+        <div id="lista-citas" class="services-grid"></div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-left">
+            <img src="img/logo-imperio.png" class="logo-footer" alt="Imperio Footer">
+            <span>IMPERIO BARBER SHOP</span>
+        </div>
+        <div class="footer-center">
+            <span>@imperio</span>
+        </div>
+        <div class="footer-right">
+            <span>+57 300 000 000</span>
+        </div>
+    </footer>
+
+    <!-- JS DEL FRONTEND -->
+    <script type="module">
+
+        import { apiGet, apiPut } from "./js/api.js";
+        import { protegerRuta, logout } from "./js/auth.js";
+
+        protegerRuta();
+
+        document.addEventListener("DOMContentLoaded", cargarCitas);
+
+        // ---- Convertir fecha ISO → DD/MM/YYYY ----
+        function formatearFecha(fechaISO) {
+            const fecha = new Date(fechaISO);
+            const dia = String(fecha.getDate()).padStart(2, "0");
+            const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+            const anio = fecha.getFullYear();
+            return `${dia}/${mes}/${anio}`;
+        }
+
+        async function cargarCitas() {
+            const res = await apiGet("/clientes/mis-citas", true);
+
+            const contenedor = document.getElementById("lista-citas");
+            contenedor.innerHTML = "";
+
+            if (!res.citas || res.citas.length === 0) {
+                contenedor.innerHTML = `
+                    <p style="text-align:center;color:#aaa;">No tienes citas registradas.</p>
+                `;
+                return;
+            }
+
+            res.citas.forEach(c => {
+                const fechaFormateada = formatearFecha(c.fecha);
+
+                contenedor.innerHTML += `
+                    <div class="service-card" style="padding:1rem;">
+
+                        <h3>${c.servicio}</h3>
+                        <p><strong>Barbero:</strong> ${c.barbero}</p>
+
+                        <p><strong>Fecha:</strong> ${fechaFormateada}</p>
+
+                        <p><strong>Hora:</strong> ${c.hora_inicio} - ${c.hora_fin}</p>
+                        <p><strong>Estado:</strong> ${c.estado}</p>
+
+                        ${
+                            c.estado === "pendiente"
+                                ? `<button class="btn-cancelar" data-id="${c.id}">
+                                        Cancelar cita
+                                   </button>`
+                                : ""
+                        }
+                    </div>
+                `;
+            });
+
+            // Activar botones cancelar
+            document.querySelectorAll(".btn-cancelar").forEach(btn => {
+                btn.addEventListener("click", async () => {
+                    const id = btn.getAttribute("data-id");
+
+                    if (confirm("¿Deseas cancelar esta cita?")) {
+                        const r = await apiPut(`/citas/${id}`, { estado: "cancelada" }, true);
+
+                        alert(r.message || r.error);
+                        cargarCitas();
+                    }
+                });
+            });
+        }
+
+        window.logout = logout;
+
+    </script>
+
+</body>
+</html>

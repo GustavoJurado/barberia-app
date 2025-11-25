@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil – Imperio Barber Shop</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Favicons desde carpeta /img -->
+    <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel="manifest" href="img/site.webmanifest">
+
+    <!-- JS -->
+    <script type="module">
+        import { protegerRuta, usuarioActual } from "./js/auth.js";
+
+        protegerRuta();
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const user = usuarioActual();
+
+            document.getElementById("nombre").innerText = user.nombre;
+            document.getElementById("email").innerText = user.email;
+            document.getElementById("rol").innerText = user.rol;
+        });
+    </script>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Mi Perfil</h1>
+
+    <p><b>Nombre:</b> <span id="nombre"></span></p>
+    <p><b>Email:</b> <span id="email"></span></p>
+    <p><b>Rol:</b> <span id="rol"></span></p>
+
+    <br>
+
+    <a href="home.html">
+        <button class="btn-outline">Volver</button>
+    </a>
+</div>
+
+</body>
+</html>

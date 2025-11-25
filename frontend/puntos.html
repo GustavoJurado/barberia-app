@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Puntos – Imperio Barber Shop</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Favicons desde carpeta /img -->
+    <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel="manifest" href="img/site.webmanifest">
+
+    <style>
+        /* Ajustes simples para mejorar la lectura */
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            width: 85%;
+            max-width: 380px;
+            margin: auto;
+            color: #333;
+        }
+
+        .puntos-num {
+            font-size: 70px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #d98a00;
+        }
+
+        .barra {
+            width: 100%;
+            background: #eee;
+            height: 12px;
+            border-radius: 20px;
+            margin: 15px 0;
+        }
+
+        .barra > div {
+            height: 100%;
+            background: #ff9900;
+            border-radius: 20px;
+        }
+
+        .motivacion {
+            font-size: 15px;
+            margin-top: 10px;
+            color: #444;
+        }
+
+        .volver-btn {
+            width: 100%;
+            background: #ff9900;
+            padding: 12px;
+            border-radius: 10px;
+            color: #000;
+            font-weight: bold;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        .volver-btn:hover {
+            background: #ffb436;
+        }
+    </style>
+
+    <script type="module">
+        import { protegerRuta } from "./js/auth.js";
+        import { apiGet } from "./js/api.js";
+
+        protegerRuta();
+
+        async function cargarPuntos() {
+            const r = await apiGet("/clientes/mis-puntos", true);
+
+            let puntos = r.puntos ?? 0;
+            document.getElementById("puntos").innerText = puntos;
+
+            // Barra de progreso (máximo 6)
+            let progreso = Math.min(puntos, 6) * (100 / 6);
+            document.getElementById("barraProg").style.width = progreso + "%";
+
+            // Mensaje
+            let faltan = 6 - puntos;
+
+            document.getElementById("mensaje").innerText =
+                faltan > 0 
+                ? `Te faltan ${faltan} punto(s) para tu corte GRATIS. ¡Sigue así! 💪✂️`
+                : "¡Felicidades! Ya puedes reclamar tu CORTE GRATIS 🎉🔥";
+        }
+
+        document.addEventListener("DOMContentLoaded", cargarPuntos);
+    </script>
+</head>
+
+<body>
+
+<div class="container" style="max-width:450px; margin-top:40px;">
+
+    <h1 style="text-align:center; color:white; margin-bottom:20px;">Mis Puntos</h1>
+
+    <div class="card">
+
+        <div id="puntos" class="puntos-num">0</div>
+
+        <p style="margin:0; font-size:14px; color:#666;">
+            Acumula 1 punto por cada corte.<br>
+            Con 6 puntos, el 7mo corte es GRATIS ✂️🔥
+        </p>
+
+        <div class="barra">
+            <div id="barraProg" style="width:0%;"></div>
+        </div>
+
+        <p id="mensaje" class="motivacion"></p>
+
+        <button class="volver-btn" onclick="location.href='home.html'">VOLVER</button>
+    </div>
+
+</div>
+
+</body>
+</html>
