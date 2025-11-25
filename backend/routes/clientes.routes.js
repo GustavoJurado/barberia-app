@@ -20,51 +20,41 @@ const router = express.Router();
 
 // ------------------------------------------------------
 // GET -> Obtener todos los clientes (ADMIN)
-// http://localhost:3000/clientes
 // ------------------------------------------------------
 router.get("/", verificarToken, verificarRol("admin"), getClientes);
 
 // ------------------------------------------------------
 // GET -> Obtener mis citas (cliente logueado)
-// http://localhost:3000/clientes/mis-citas
 // ------------------------------------------------------
 router.get("/mis-citas", verificarToken, getMisCitas);
 
 // ------------------------------------------------------
 // GET -> Perfil del cliente logueado
-// http://localhost:3000/clientes/perfil
 // ------------------------------------------------------
 router.get("/perfil", verificarToken, getPerfil);
 
 // ------------------------------------------------------
-// GET -> Mis puntos actuales
-// http://localhost:3000/clientes/mis-puntos
+// GET -> Mis puntos
 // ------------------------------------------------------
 router.get("/mis-puntos", verificarToken, getMisPuntos);
 
 // ------------------------------------------------------
-// GET -> Mi historial (canceladas + completadas)
-// http://localhost:3000/clientes/mis-historial
+// GET -> Mi historial (cliente)
 // ------------------------------------------------------
 router.get("/mis-historial", verificarToken, getMiHistorial);
 
 // ------------------------------------------------------
-// POST -> Crear un cliente (solo admin)
-// http://localhost:3000/clientes
+// POST -> Crear cliente (admin)
 // ------------------------------------------------------
 router.post("/", verificarToken, verificarRol("admin"), crearCliente);
 
 // ------------------------------------------------------
-// PUT -> Actualizar cliente (solo admin)
-// Permite actualizar nombre, email, puntos y contraseña.
-// El controlador ya maneja los campos opcionales.
-// http://localhost:3000/clientes/:id
+// PUT -> Actualizar cliente (admin)
 // ------------------------------------------------------
 router.put("/:id", verificarToken, verificarRol("admin"), actualizarCliente);
 
 // ------------------------------------------------------
-// DELETE -> Eliminar cliente (solo admin)
-// http://localhost:3000/clientes/:id
+// DELETE -> Eliminar cliente (admin)
 // ------------------------------------------------------
 router.delete("/:id", verificarToken, verificarRol("admin"), eliminarCliente);
 

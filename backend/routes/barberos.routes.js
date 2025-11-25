@@ -10,22 +10,18 @@ import bcrypt from "bcryptjs";
 
 const router = express.Router();
 
-
-// ------------------------------------------------------
-// GET -> Listar barberos
-// ------------------------------------------------------
-router.get("/", async (req, res) => {
+/*
+========================================================
+ GET → Listar barberos
+ Ahora protegido con token y solo devuelve:
+    id, nombre
+Esto evita errores en frontend
+========================================================
+*/
+router.get("/", verificarToken, async (req, res) => {
     try {
         const [rows] = await db.query(
-            `SELECT 
-                b.id,
-                b.nombre,
-                b.foto,
-                b.cliente_id,
-                c.email
-             FROM barberos b
-             LEFT JOIN clientes c ON c.id = b.cliente_id
-             ORDER BY b.id ASC`
+            `SELECT id, nombre FROM barberos ORDER BY id ASC`
         );
 
         res.json(rows);
@@ -36,9 +32,11 @@ router.get("/", async (req, res) => {
 });
 
 
-// ------------------------------------------------------
-// POST -> Crear barbero
-// ------------------------------------------------------
+/*
+========================================================
+ POST → Crear barbero (solo admin)
+========================================================
+*/
 router.post("/", verificarToken, verificarRol("admin"), async (req, res) => {
     try {
         const { nombre, foto, cliente_id } = req.body;
@@ -61,14 +59,11 @@ router.post("/", verificarToken, verificarRol("admin"), async (req, res) => {
 });
 
 
-// ------------------------------------------------------
-// PUT -> Editar barbero COMPLETO
-// Ahora permite:
-// - nombre
-// - foto
-// - email
-// - password (encripta si cambia)
-// ------------------------------------------------------
+/*
+========================================================
+ PUT → Editar barbero (admin)
+========================================================
+*/
 router.put("/:id", verificarToken, verificarRol("admin"), async (req, res) => {
     try {
         const { id } = req.params;
@@ -78,7 +73,7 @@ router.put("/:id", verificarToken, verificarRol("admin"), async (req, res) => {
             return res.status(400).json({ error: "El nombre es obligatorio" });
         }
 
-        // 1) Obtener cliente_id del barbero
+        // Obtener cliente_id del barbero
         const [barberoRows] = await db.query(
             "SELECT cliente_id FROM barberos WHERE id = ?",
             [id]
@@ -90,9 +85,7 @@ router.put("/:id", verificarToken, verificarRol("admin"), async (req, res) => {
 
         const clienteId = barberoRows[0].cliente_id;
 
-        // --------------------------------------------------
-        // 2) Actualizar tabla barberos
-        // --------------------------------------------------
+        // Actualizar tabla barberos
         await db.query(
             `UPDATE barberos 
              SET nombre = ?, foto = ?
@@ -100,11 +93,9 @@ router.put("/:id", verificarToken, verificarRol("admin"), async (req, res) => {
             [nombre, foto || null, id]
         );
 
-        // --------------------------------------------------
-        // 3) Actualizar tabla clientes si es necesario
-        // --------------------------------------------------
+        // Actualizar cliente (si existe)
         if (clienteId) {
-            // Cambiar email
+
             if (email) {
                 await db.query(
                     `UPDATE clientes SET email = ? WHERE id = ?`,
@@ -112,7 +103,6 @@ router.put("/:id", verificarToken, verificarRol("admin"), async (req, res) => {
                 );
             }
 
-            // Cambiar password
             if (password && password.trim() !== "") {
                 const hashed = await bcrypt.hash(password, 10);
                 await db.query(
@@ -131,10 +121,11 @@ router.put("/:id", verificarToken, verificarRol("admin"), async (req, res) => {
 });
 
 
-// ------------------------------------------------------
-// DELETE -> Eliminar barbero
-// NO elimina el cliente, solo el barbero.
-// ------------------------------------------------------
+/*
+========================================================
+ DELETE → Eliminar barbero (admin)
+========================================================
+*/
 router.delete("/:id", verificarToken, verificarRol("admin"), async (req, res) => {
     try {
         const { id } = req.params;
